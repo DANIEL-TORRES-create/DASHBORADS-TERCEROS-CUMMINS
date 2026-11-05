@@ -6130,10 +6130,20 @@ function renderComparativaPorOperacion(containerId, metricas, tituloPanel){
   const metricaActiva=metricas.find(m=>m.id===metricaActivaId)||metricas[0];
 
   const operaciones=listaOperacionesDisponibles();
-  const filas=operaciones.map(op=>{
-    const unidadesOp=Object.keys(FLOTA_MAP).filter(p=>esUnidadActiva(p) && operacionDeUnidad(p)===op);
-    return {operacion:op, unidades:unidadesOp, valor:metricaActiva.calcular(unidadesOp)};
-  });
+  const sinOperaciones=operaciones.length===0;
+  let filas;
+  if(!sinOperaciones){
+    filas=operaciones.map(op=>{
+      const unidadesOp=Object.keys(FLOTA_MAP).filter(p=>esUnidadActiva(p) && operacionDeUnidad(p)===op);
+      return {operacion:op, unidades:unidadesOp, valor:metricaActiva.calcular(unidadesOp)};
+    });
+  } else {
+    // Sin Operación configurada: una fila por unidad (activa y visible)
+    let placasFallback=Object.keys(FLOTA_MAP).filter(unidadVisible);
+    if(placasFallback.length===0) placasFallback=Object.keys(DATA).filter(unidadVisible);
+    placasFallback.sort();
+    filas=placasFallback.map(p=>({operacion:p, unidades:[p], valor:metricaActiva.calcular([p])}));
+  }
 
   cont.innerHTML = `
     <div class="comparativa-head">
@@ -6143,15 +6153,15 @@ function renderComparativaPorOperacion(containerId, metricas, tituloPanel){
       </div>
     </div>
     <div class="trend-chart" id="${containerId}_chart" style="height:220px;"></div>
-    <div class="comparativa-nota">${operaciones.length===0
-      ? 'No hay "Operación" configurada para ninguna unidad en Administración de Flota -- esta comparativa necesita esa configuración manual.'
+    <div class="comparativa-nota">${sinOperaciones
+      ? 'Sin Operación configurada en Administración de Flota: la comparativa se muestra por unidad.'
       : 'Operación = dimensión configurada manualmente en Administración de Flota. Cada barra se recalcula desde los totales de ese grupo (nunca es un promedio de valores individuales).'}</div>`;
 
   const selEl=$id(containerId+"_sel");
   if(selEl) selEl.querySelectorAll(".cm-opt").forEach(opt=>{
     opt.addEventListener("click",()=>{ _COMPARATIVA_METRICA_ACTIVA[containerId]=opt.dataset.m; renderComparativaPorOperacion(containerId, metricas, tituloPanel); });
   });
-  if(operaciones.length===0) return;
+    if(filas.length===0) return;
 
   const chartEl=$id(containerId+"_chart");
   chartEl.style.height = (containerId==="homeComparativaPanel" ? 240 : alturaAdaptativaCategorias(filas.length))+"px";
