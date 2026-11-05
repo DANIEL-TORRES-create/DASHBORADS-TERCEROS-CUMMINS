@@ -6161,7 +6161,7 @@ function renderComparativaPorOperacion(containerId, metricas, tituloPanel){
   if(selEl) selEl.querySelectorAll(".cm-opt").forEach(opt=>{
     opt.addEventListener("click",()=>{ _COMPARATIVA_METRICA_ACTIVA[containerId]=opt.dataset.m; renderComparativaPorOperacion(containerId, metricas, tituloPanel); });
   });
-    if(filas.length===0) return;
+  if(filas.length===0) return;
 
   const chartEl=$id(containerId+"_chart");
   chartEl.style.height = (containerId==="homeComparativaPanel" ? 240 : alturaAdaptativaCategorias(filas.length))+"px";
